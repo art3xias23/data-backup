@@ -5,43 +5,60 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
-func RecursiveZip(pathToZip, destinationPath string) error {
-	destinationFile, err := os.Create(destinationPath)
+func RecursiveZip(source, target string) error {
+	destinationFile, err := os.Create(target)
 	if err != nil {
 		return err
 	}
-	myZip := zip.NewWriter(destinationFile)
-	err = filepath.Walk(pathToZip, func(filePath string, info os.FileInfo, err error) error {
+
+	defer destinationFile.Close()
+
+	writer := zip.NewWriter(destinationFile)
+	defer writer.Close()
+	return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+
+		if err != nil {
+			return err
+		}
+
+		header, err := zip.FileInfoHeader(info)
+
+		if err != nil {
+			return err
+		}
+
+		header.Method = zip.Deflate
+
+		header.Name, err = filepath.Rel(filepath.Dir(source), path)
+
+		if err != nil {
+			return err
+		}
+
 		if info.IsDir() {
-			return nil
+			header.Name += "/"
 		}
+
+		headerWriter, err := writer.CreateHeader(header)
+
 		if err != nil {
 			return err
 		}
-		relPath := strings.TrimPrefix(filePath, filepath.Dir(pathToZip))
-		zipFile, err := myZip.Create(relPath)
+
+		if info.IsDir() {
+			return err
+		}
+
+		f, err := os.Open(path)
 		if err != nil {
 			return err
 		}
-		fsFile, err := os.Open(filePath)
-		if err != nil {
-			return err
-		}
-		_, err = io.Copy(zipFile, fsFile)
-		if err != nil {
-			return err
-		}
-		return nil
+		defer f.Close()
+
+		_, err = io.Copy(headerWriter, f)
+		return err
 	})
-	if err != nil {
-		return err
-	}
-	err = myZip.Close()
-	if err != nil {
-		return err
-	}
-	return nil
+
 }
