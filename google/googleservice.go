@@ -15,7 +15,7 @@ type GoogleService struct {
 	service *drive.Service
 }
 
-func createDriveService() (*GoogleService, error) {
+func CreateDriveService() (*GoogleService, error) {
 	ctx := context.Background()
 	client, err := google.DefaultClient(ctx, drive.DriveFileScope)
 	if err != nil {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"main/google"
 	"main/lib"
 	"os"
 	"time"
@@ -22,11 +23,13 @@ func main() {
 	}
 	// targetZipFile := "output.zip"
 	start := time.Now()
+	// destination, err := zipper.ZipIt(my_dir, my_dir, "output")
 	err := lib.RecursiveZip(my_dir, "output.zip")
 	if err != nil {
 		fmt.Println("Error creating ZIP archive:", err)
+		return
 	} else {
-		fmt.Println("ZIP archive created successfully.")
+		fmt.Printf("ZIP archive created successfully.")
 	}
 
 	end := time.Now()
@@ -34,4 +37,20 @@ func main() {
 	duration := end.Sub(start)
 
 	fmt.Printf("Time it took to zip: %v\n", duration)
+
+	gService, err := google.CreateDriveService()
+
+	if err != nil {
+		fmt.Printf("Could not instantiate google service")
+		return
+	}
+
+	uploadedFileId, err := gService.UploadFile("output.zip", "application/zip")
+
+	if err != nil {
+		fmt.Printf("Could not upload file to drive")
+		return
+	}
+
+	fmt.Printf("Uploaded successful! File Id: %s", uploadedFileId)
 }
