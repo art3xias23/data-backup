@@ -17,48 +17,64 @@ func RecursiveZip(source, target string) error {
 
 	writer := zip.NewWriter(destinationFile)
 	defer writer.Close()
-	return filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(source,
+		func(path string, info os.FileInfo, err error) error {
 
-		if err != nil {
+			if err != nil {
+				return err
+			}
+
+			header, err := zip.FileInfoHeader(info)
+
+			if err != nil {
+				return err
+			}
+
+			header.Method = zip.Deflate
+
+			header.Name, err = filepath.Rel(filepath.Dir(source), path)
+
+			if err != nil {
+				return err
+			}
+
+			if info.IsDir() {
+				header.Name += "/"
+			}
+
+			headerWriter, err := writer.CreateHeader(header)
+
+			if err != nil {
+				return err
+			}
+
+			if info.IsDir() {
+				return err
+			}
+
+			f, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+
+			_, err = io.Copy(headerWriter, f)
 			return err
-		}
+		})
 
-		header, err := zip.FileInfoHeader(info)
+}
 
-		if err != nil {
-			return err
-		}
+func Zip2(origin string, destination string) error {
 
-		header.Method = zip.Deflate
+	destionationFile, _ := os.Create(destination)
 
-		header.Name, err = filepath.Rel(filepath.Dir(source), path)
+	defer destionationFile.Close()
 
-		if err != nil {
-			return err
-		}
+	writer := zip.NewWriter(destionationFile)
 
-		if info.IsDir() {
-			header.Name += "/"
-		}
+	defer writer.Close()
 
-		headerWriter, err := writer.CreateHeader(header)
-
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return err
-		}
-
-		f, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-
-		_, err = io.Copy(headerWriter, f)
-		return err
+	return filepath.Walk(origin, func(path string, fi os.FileInfo, err error) error {
+		header, err := zip.FileInfoHeader(fi)
 	})
-
 }
