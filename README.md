@@ -1,4 +1,4 @@
-# data-backup
+# go-data-backup
 
 I wrote this small go utility to help me archive a folder with valuable project and research info and upload it to google drive.
 
