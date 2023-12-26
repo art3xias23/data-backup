@@ -3,12 +3,18 @@ package google
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
-	"time"
 
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/option"
+)
+
+const (
+	ServiceAccount = "/mnt/c/Users/kmilchev/Desktop/Code/Go/go-backup/service.json" // Please set the json file of Service account.
+	fileName       = "/mnt/c/Users/kmilchev/Desktop/Code/Go/go-backup/output.zip"
+	parentFolderId = "1B7JUwn0YTNNfAXzKiMsVQdQmH03QKLgs"
+	SCOPE          = drive.DriveScope
 )
 
 type GoogleService struct {
@@ -17,38 +23,43 @@ type GoogleService struct {
 
 func CreateDriveService() (*GoogleService, error) {
 	ctx := context.Background()
-	client, err := google.DefaultClient(ctx, drive.DriveFileScope)
+	srv, err := drive.NewService(ctx, option.WithCredentialsFile(ServiceAccount), option.WithScopes(SCOPE))
 	if err != nil {
-		return &GoogleService{}, fmt.Errorf("unable to create Google Drive API client: %v", err)
+		log.Fatalf("Warning: Unable to create drive Client %v", err)
 	}
 
-	driveService, err := drive.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return &GoogleService{}, fmt.Errorf("unable to create Google Drive API service: %v", err)
-	}
-
-	return &GoogleService{driveService}, nil
+	return &GoogleService{srv}, nil
 }
 
-func (uploader *GoogleService) UploadFile(localFilePath, mimeType string) (string, error) {
-	file, err := os.Open(localFilePath)
+func (uploader *GoogleService) UploadFile(mimeType string) (string, error) {
+	file, err := os.Open(fileName)
 	if err != nil {
 		return "", fmt.Errorf("unable to open file: %v", err)
 	}
 	defer file.Close()
 
-	driveFile := &drive.File{
-		MimeType: mimeType,
-		Name:     "UploadedFile.zip",
-	}
-
-	_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	uploadedFile, err := uploader.service.Files.Create(driveFile).Media(file).Do()
+	info, _ := file.Stat()
 	if err != nil {
-		return "", fmt.Errorf("Unable to upload file: %v", err)
+		log.Fatalf("Warning: %v", err)
 	}
 
-	return uploadedFile.Id, nil
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer file.Close()
+
+	f := &drive.File{Name: info.Name(),
+		Parents: []string{parentFolderId}}
+
+	res, err := uploader.service.Files.
+		Create(f).
+		Media(file). //context.Background(), file, fileInf.Size(), baseMimeType).
+		ProgressUpdater(func(now, size int64) { fmt.Printf("%d, %d\r", now, size) }).
+		Do()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return res.Name, nil
 }

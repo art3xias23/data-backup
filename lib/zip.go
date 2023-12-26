@@ -63,18 +63,3 @@ func RecursiveZip(source, target string) error {
 		})
 
 }
-
-func Zip2(origin string, destination string) error {
-
-	destionationFile, _ := os.Create(destination)
-
-	defer destionationFile.Close()
-
-	writer := zip.NewWriter(destionationFile)
-
-	defer writer.Close()
-
-	return filepath.Walk(origin, func(path string, fi os.FileInfo, err error) error {
-		header, err := zip.FileInfoHeader(fi)
-	})
-}
