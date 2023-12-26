@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	ServiceAccount = "/mnt/c/Users/kmilchev/Desktop/Code/Go/go-backup/service.json" // Please set the json file of Service account.
-	fileName       = "/mnt/c/Users/kmilchev/Desktop/Code/Go/go-backup/output.zip"
+	ServiceAccount = "C:/Users/kmilchev/Desktop/Code/Go/go-backup/service.json" // Please set the json file of Service account.
+	fileName       = "C:/Users/kmilchev/Desktop/Code/Go/go-backup/output.zip"
 	parentFolderId = "1B7JUwn0YTNNfAXzKiMsVQdQmH03QKLgs"
 	SCOPE          = drive.DriveScope
 )
