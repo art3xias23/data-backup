@@ -12,26 +12,36 @@ import (
 
 func main() {
 
-	// err := ZipFolder()
+	err := LoadEnvVariables()
+	if err != nil {
+		return
+	}
 
-	// if err != nil {
-	// 	return
-	// }
+	err = ZipFolder()
 
-	erra := UploadFolder()
+	if err != nil {
+		return
+	}
 
-	if erra != nil {
+	err = UploadFolder()
+
+	if err != nil {
 		return
 	}
 }
 
-func ZipFolder() error {
-
+func LoadEnvVariables() error {
 	if err := godotenv.Load(); err != nil {
 		lib.SendMail("Could not load env variables")
 		return err
 	}
-	my_dir := os.Getenv("TinoBackUpPath")
+
+	return nil
+}
+
+func ZipFolder() error {
+
+	my_dir := os.Getenv("BackUpPath")
 	if my_dir == "" {
 		err := fmt.Errorf("backUp path is empty, couldn ot proceed")
 		lib.SendMail(err.Error())

@@ -7,8 +7,8 @@ import (
 )
 
 func SendMail(err string) {
-	from := os.Getenv("TinoBackUpEmailAccount")
-	frompassword := os.Getenv("TinoBackUpEmailPassword")
+	from := os.Getenv("BackUpEmailAccount")
+	frompassword := os.Getenv("BackUpEmailPassword")
 	to := "konstantin.v.milchev@gmail.com"
 
 	smtpServer := "smtp.gmail.com"
